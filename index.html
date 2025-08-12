@@ -63,7 +63,7 @@
                 </div>
                 <form id="login-form-element" class="mt-8 space-y-6">
                     <div class="rounded-md shadow-sm -space-y-px">
-                        <input id="login-email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address" value="member@example.com">
+                        <input id="login-email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address" value="enterprise@example.com">
                         <input id="login-password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Password" value="password">
                     </div>
                     <div class="flex items-center justify-between">
@@ -119,7 +119,7 @@
             <div class="w-full max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-lg">
                 <div class="text-center mb-4">
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Consolidate Your Leads</h1>
-                    <p class="mt-2 text-gray-600">Drag & drop files to merge, then arrange your data just the way you like it.</p>
+                    <p id="consolidator-description" class="mt-2 text-gray-600">Drag & drop files to merge, then arrange your data just the way you like it.</p>
                 </div>
                 <div id="credit-display" class="text-center mb-8"></div>
                 <div class="border-t border-b border-gray-200 py-6 mb-6">
@@ -137,12 +137,21 @@
                     <button id="consolidateBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105">Consolidate Leads</button>
                 </div>
                 <div id="resultsContainer" class="hidden">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
                         <h2 class="text-2xl font-bold text-gray-900">Consolidated Contacts</h2>
-                        <div class="relative" id="exportDropdownContainer">
-                            <button id="exportBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 inline-flex items-center">Export<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
-                            <div id="exportMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 origin-top-right">
-                                <div class="py-1"><a href="#" id="downloadXlsxBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download Excel (.xlsx)</a><a href="#" id="downloadCsvBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download CSV (.csv)</a><a href="#" id="copyToSheetsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Copy for Google Sheets</a></div>
+                        <div class="flex items-center space-x-2">
+                             <!-- Data Cleaning Features -->
+                            <button id="format-clean-btn" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">Format & Clean</button>
+                            <div id="clean-list-container" class="relative flex items-center">
+                                <select id="deduplicate-column-select" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                                <button id="clean-list-btn" class="ml-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">Clean List</button>
+                            </div>
+                            <!-- Export Dropdown -->
+                            <div class="relative" id="exportDropdownContainer">
+                                <button id="exportBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 inline-flex items-center">Export<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
+                                <div id="exportMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 origin-top-right">
+                                    <div class="py-1"><a href="#" id="downloadXlsxBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download Excel (.xlsx)</a><a href="#" id="downloadCsvBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download CSV (.csv)</a><a href="#" id="copyToSheetsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Copy for Google Sheets</a></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -167,7 +176,7 @@
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><label class="block text-sm font-medium text-gray-700">Full Name</label><input type="text" value="Alex Doe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Email Address</label><input type="email" value="member@example.com" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Email Address</label><input type="email" value="enterprise@example.com" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"></div>
                 </div>
                 <div class="mt-6"><button class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Save Changes</button></div>
             </div>
@@ -186,10 +195,12 @@
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Consolidate up to 2 sheets</li>
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Max 500 rows per sheet</li>
                     </ul>
-                    <button class="mt-auto w-full py-3 px-4 rounded-lg bg-gray-200 text-gray-700 font-semibold text-center">Current Plan</button>
+                    <div id="free-plan-btn-container" class="mt-auto">
+                        <button class="w-full py-3 px-4 rounded-lg bg-indigo-600 text-white font-semibold text-center hover:bg-indigo-700">Select Plan</button>
+                    </div>
                 </div>
                 <!-- Pro Tier -->
-                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-indigo-500 relative flex flex-col">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-gray-200 relative flex flex-col">
                     <div class="absolute top-0 -translate-y-1/2 w-full flex justify-center"><span class="px-3 py-1 bg-indigo-500 text-white text-sm font-semibold rounded-full">Most Popular</span></div>
                     <h3 class="text-2xl font-bold text-center">Pro</h3>
                     <p class="mt-8 text-center text-4xl font-extrabold">$20<span class="text-base font-medium text-gray-500">/mo</span></p>
@@ -198,10 +209,12 @@
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Credits refresh monthly</li>
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Full access</li>
                     </ul>
-                    <div id="paypal-button-container-P-PRO" class="mt-auto"></div>
+                    <div id="pro-plan-btn-container" class="mt-auto">
+                        <div id="paypal-button-container-P-PRO"></div>
+                    </div>
                 </div>
                 <!-- Enterprise Tier -->
-                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-gray-200 flex flex-col">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-indigo-500 flex flex-col">
                     <h3 class="text-2xl font-bold text-center">Enterprise</h3>
                     <p class="mt-8 text-center text-4xl font-extrabold">$149<span class="text-base font-medium text-gray-500">/mo</span></p>
                     <ul class="mt-6 space-y-2 text-gray-600 plan-feature-list">
@@ -209,7 +222,9 @@
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Unlimited rows</li>
                         <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Dedicated support</li>
                     </ul>
-                    <div id="paypal-button-container-P-ENT" class="mt-auto"></div>
+                    <div id="ent-plan-btn-container" class="mt-auto">
+                         <div id="paypal-button-container-P-ENT"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,12 +234,17 @@
     <script>
         // --- USER & APP STATE ---
         let currentUser = {
-            plan: 'free',
-            credits: 3
+            plan: 'enterprise',
+            credits: Infinity
         };
         let consolidatedData = [];
         let selectedFiles = [];
-        const MAX_FILES = 10;
+        
+        const planLimits = {
+            free: { maxFiles: 2, maxRows: 500 },
+            pro: { maxFiles: 10, maxRows: Infinity },
+            enterprise: { maxFiles: 20, maxRows: Infinity }
+        };
 
         // --- DOM Elements ---
         const authContainer = document.getElementById('auth-container');
@@ -232,6 +252,10 @@
         const loginFormElement = document.getElementById('login-form-element');
         const logoutBtn = document.getElementById('logout-btn');
         const creditDisplay = document.getElementById('credit-display');
+        const consolidatorDescription = document.getElementById('consolidator-description');
+        const cleanListBtn = document.getElementById('clean-list-btn');
+        const deduplicateColumnSelect = document.getElementById('deduplicate-column-select');
+        const formatCleanBtn = document.getElementById('format-clean-btn');
         
         // --- PAGE NAVIGATION ---
         const pages = ['consolidator', 'profile', 'payment'];
@@ -256,7 +280,7 @@
             e.preventDefault();
             authContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
-            updateCreditDisplay();
+            updateUIForPlan();
         });
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -264,12 +288,33 @@
             authContainer.classList.remove('hidden');
         });
         
-        function updateCreditDisplay() {
+        function updateUIForPlan() {
             if (currentUser.plan === 'free') {
                 creditDisplay.innerHTML = `<p class="text-lg font-semibold text-indigo-600">You have ${currentUser.credits} credits remaining.</p>`;
-            } else {
-                creditDisplay.innerHTML = '';
+                consolidatorDescription.textContent = `Free plan: Consolidate up to 2 sheets with 500 rows each.`;
+            } else if (currentUser.plan === 'enterprise') {
+                creditDisplay.innerHTML = `<p class="text-lg font-semibold text-green-600">Enterprise Plan: Unlimited Consolidations</p>`;
+                consolidatorDescription.textContent = `Enterprise plan: Consolidate up to 20 sheets with unlimited rows.`;
+            } else if (currentUser.plan === 'pro') {
+                 creditDisplay.innerHTML = `<p class="text-lg font-semibold text-indigo-600">Pro Plan: 100 monthly credits</p>`;
+                 consolidatorDescription.textContent = `Pro plan: Consolidate up to 10 sheets with unlimited rows.`;
             }
+            updateSubscriptionPageUI();
+        }
+        
+        function updateSubscriptionPageUI() {
+            document.getElementById('free-plan-btn-container').innerHTML = `<button class="w-full py-3 px-4 rounded-lg bg-indigo-600 text-white font-semibold text-center hover:bg-indigo-700">Select Plan</button>`;
+            document.getElementById('pro-plan-btn-container').innerHTML = `<div id="paypal-button-container-P-PRO"></div>`;
+            document.getElementById('ent-plan-btn-container').innerHTML = `<div id="paypal-button-container-P-ENT"></div>`;
+
+            if (currentUser.plan === 'free') {
+                document.getElementById('free-plan-btn-container').innerHTML = `<button class="w-full py-3 px-4 rounded-lg bg-gray-200 text-gray-700 font-semibold text-center cursor-default">Current Plan</button>`;
+            } else if (currentUser.plan === 'pro') {
+                document.getElementById('pro-plan-btn-container').innerHTML = `<button class="w-full py-3 px-4 rounded-lg bg-gray-200 text-gray-700 font-semibold text-center cursor-default">Current Plan</button>`;
+            } else if (currentUser.plan === 'enterprise') {
+                document.getElementById('ent-plan-btn-container').innerHTML = `<button class="w-full py-3 px-4 rounded-lg bg-gray-200 text-gray-700 font-semibold text-center cursor-default">Current Plan</button>`;
+            }
+            renderPayPalButtons();
         }
 
         // --- CONSOLIDATOR APP LOGIC ---
@@ -293,7 +338,8 @@
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
         function handleFiles(files) {
-            if (selectedFiles.length + files.length > MAX_FILES) { showMessage(`You can upload a maximum of ${MAX_FILES} files.`); return; }
+            const maxFiles = planLimits[currentUser.plan].maxFiles;
+            if (selectedFiles.length + files.length > maxFiles) { showMessage(`Your plan allows a maximum of ${maxFiles} files.`); return; }
             for (const file of files) { if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) { selectedFiles.push(file); addFileToListUI(file); } }
         }
 
@@ -330,8 +376,9 @@
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    if (currentUser.plan === 'free' && jsonData.length > 500) {
-                        return reject(new Error(`File "${file.name}" exceeds the 500-row limit for free users.`));
+                    const maxRows = planLimits[currentUser.plan].maxRows;
+                    if (jsonData.length > maxRows) {
+                        return reject(new Error(`File "${file.name}" exceeds the ${maxRows}-row limit for your plan.`));
                     }
                     resolve(XLSX.utils.sheet_to_json(worksheet));
                 } catch (error) { reject(new Error("Error parsing file: " + file.name)); } };
@@ -342,7 +389,6 @@
 
         consolidateBtn.addEventListener('click', async () => {
             if (currentUser.plan === 'free' && currentUser.credits <= 0) { showMessage("You have no credits left. Please upgrade your plan."); return; }
-            if (currentUser.plan === 'free' && selectedFiles.length > 2) { showMessage("Free plan users can only consolidate 2 sheets at a time."); return; }
             if (selectedFiles.length < 1) { showMessage("Please select at least one file."); return; }
             
             consolidateBtn.textContent = "Processing..."; consolidateBtn.disabled = true;
@@ -368,7 +414,7 @@
                 
                 if (currentUser.plan === 'free') {
                     currentUser.credits--;
-                    updateCreditDisplay();
+                    updateUIForPlan();
                 }
 
                 displayResults(consolidatedData);
@@ -384,12 +430,131 @@
             headers.forEach(headerText => { const th = document.createElement('th'); th.scope = 'col'; th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'; th.innerHTML = `<div class="flex items-center">${dragIconSvg}<span>${headerText}</span></div>`; tableHeader.appendChild(th); });
             data.forEach((row) => { const tr = document.createElement('tr'); headers.forEach((header, colIndex) => { const td = document.createElement('td'); td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700'; let content = row[header] || ''; if (colIndex === 0) { td.innerHTML = `<div class="flex items-center">${dragIconSvg}<span>${content}</span></div>`; } else { td.textContent = content; } tr.appendChild(td); }); tableBody.appendChild(tr); });
             resultsContainer.classList.remove('hidden'); dragDescription.classList.remove('hidden'); makeTableSortable();
+            populateDeduplicateDropdown(headers);
         }
 
         function makeTableSortable() {
             new Sortable(tableBody, { animation: 150, handle: '.drag-handle', onEnd: (evt) => { const movedRow = consolidatedData.splice(evt.oldIndex, 1)[0]; consolidatedData.splice(evt.newIndex, 0, movedRow); } });
             new Sortable(tableHeader, { animation: 150, handle: '.drag-handle', onEnd: (evt) => { const oldIndex = evt.oldIndex; const newIndex = evt.newIndex; const currentHeaders = Object.keys(consolidatedData[0]); const movedHeader = currentHeaders.splice(oldIndex, 1)[0]; currentHeaders.splice(newIndex, 0, movedHeader); consolidatedData = consolidatedData.map(row => { const newRow = {}; currentHeaders.forEach(header => { newRow[header] = row[header]; }); return newRow; }); displayResults(consolidatedData); } });
         }
+
+        // --- DATA CLEANING LOGIC ---
+        function populateDeduplicateDropdown(headers) {
+            deduplicateColumnSelect.innerHTML = '<option value="">-- Select Column to Clean --</option>';
+            headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                deduplicateColumnSelect.appendChild(option);
+            });
+        }
+
+        cleanListBtn.addEventListener('click', () => {
+            const selectedColumn = deduplicateColumnSelect.value;
+            if (!selectedColumn) {
+                showMessage("Please select a column to use for removing duplicates.");
+                return;
+            }
+            const originalRowCount = consolidatedData.length;
+            const seen = new Set();
+            consolidatedData = consolidatedData.filter(row => {
+                const value = row[selectedColumn];
+                if (value && !seen.has(value)) {
+                    seen.add(value);
+                    return true;
+                }
+                return false;
+            });
+            const newRowCount = consolidatedData.length;
+            const removedCount = originalRowCount - newRowCount;
+            showMessage(`Removed ${removedCount} duplicate rows based on the "${selectedColumn}" column.`, false);
+            displayResults(consolidatedData);
+        });
+        
+        function toProperCase(str) {
+            if (typeof str !== 'string' || !str) return str;
+            const abbreviations = ['CEO', 'CTO', 'COO', 'CFO', 'VP', 'SVP', 'EVP', 'HR', 'IT', 'LLC', 'USA', 'CIO'];
+            return str.replace(/\w\S*/g, (txt) => {
+                if (abbreviations.includes(txt.toUpperCase())) {
+                    return txt.toUpperCase();
+                }
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        }
+
+        function cleanTextAndEmojis(str) {
+            if (typeof str !== 'string' || !str) return str;
+            const emojiRegex = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
+            return str.replace(emojiRegex, '').replace(/\s+/g, ' ').trim();
+        }
+
+        function formatEmail(email) {
+            if (typeof email !== 'string' || !email) return '';
+            const emailStr = email.trim().toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(emailStr) ? emailStr : '';
+        }
+
+        function formatUSPhone(phone) {
+            if (!phone) return '';
+            const cleaned = ('' + phone).replace(/\D/g, '');
+            const match = cleaned.match(/^(1|)?(\d{10})$/);
+            if (match) {
+                const intl = (match[1] ? '+1 ' : '');
+                const part2 = match[2];
+                return `${intl}(${part2.substring(0,3)}) ${part2.substring(3,6)}-${part2.substring(6,10)}`;
+            }
+            return phone;
+        }
+        
+        function formatURL(url) {
+            if (typeof url !== 'string' || !url) return '';
+            let urlStr = url.trim();
+            if (urlStr && !urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
+                urlStr = 'http://' + urlStr;
+            }
+            return urlStr;
+        }
+
+        formatCleanBtn.addEventListener('click', () => {
+            if (consolidatedData.length === 0) {
+                showMessage("Please consolidate data first before cleaning.");
+                return;
+            }
+            const columnsToProperCase = ['Full Name', 'First Name', 'Last Name', 'Company', 'Location', 'Industry', 'Job Position'];
+            
+            consolidatedData = consolidatedData.map(row => {
+                const newRow = {};
+                for (const key in row) {
+                    let value = row[key];
+                    if (typeof value === 'string') {
+                        value = cleanTextAndEmojis(value);
+                    }
+                    if (columnsToProperCase.includes(key)) {
+                        value = toProperCase(value);
+                    }
+                    if (key === 'Email') {
+                        value = formatEmail(value);
+                    }
+                    if (key === 'Phone' || key === 'Company Phone') {
+                        value = formatUSPhone(value);
+                    }
+                    if (key === 'Company URL' || key === 'Linkedin' || key === 'Campaign URL' || key === 'Snov.io URL') {
+                        value = formatURL(value);
+                    }
+                    newRow[key] = value;
+                }
+                return newRow;
+            });
+            
+            const originalLength = consolidatedData.length;
+            consolidatedData = consolidatedData.filter(row => row['Email']);
+            const removedCount = originalLength - consolidatedData.length;
+
+            showMessage(`Data cleaned and formatted. Removed ${removedCount} rows with invalid emails.`, false);
+            displayResults(consolidatedData);
+        });
+
 
         // --- EXPORT LOGIC ---
         exportBtn.addEventListener('click', () => exportMenu.classList.toggle('hidden'));
@@ -403,14 +568,16 @@
         // --- PAYPAL LOGIC ---
         function renderPayPalButtons() {
             try {
-                // Pro Plan
-                paypal.Buttons({ style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' }, createSubscription: (data, actions) => actions.subscription.create({ 'plan_id': 'P-PRO-PLAN-ID' }) }).render('#paypal-button-container-P-PRO');
-                // Enterprise Plan
-                paypal.Buttons({ style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' }, createSubscription: (data, actions) => actions.subscription.create({ 'plan_id': 'P-ENTERPRISE-PLAN-ID' }) }).render('#paypal-button-container-P-ENT');
+                if (currentUser.plan !== 'pro') {
+                    paypal.Buttons({ style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' }, createSubscription: (data, actions) => actions.subscription.create({ 'plan_id': 'P-PRO-PLAN-ID' }) }).render('#paypal-button-container-P-PRO');
+                }
+                if (currentUser.plan !== 'enterprise') {
+                    paypal.Buttons({ style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' }, createSubscription: (data, actions) => actions.subscription.create({ 'plan_id': 'P-ENTERPRISE-PLAN-ID' }) }).render('#paypal-button-container-P-ENT');
+                }
             } catch (error) {
                 console.error("PayPal Buttons failed to render.", error);
-                document.getElementById('paypal-button-container-P-PRO').innerHTML = '<p class="text-center text-sm text-red-600">Could not load PayPal buttons.</p>';
-                document.getElementById('paypal-button-container-P-ENT').innerHTML = '<p class="text-center text-sm text-red-600">Could not load PayPal buttons.</p>';
+                document.getElementById('pro-plan-btn-container').innerHTML = '<p class="text-center text-sm text-red-600">Could not load PayPal buttons.</p>';
+                document.getElementById('ent-plan-btn-container').innerHTML = '<p class="text-center text-sm text-red-600">Could not load PayPal buttons.</p>';
             }
         }
         renderPayPalButtons();
