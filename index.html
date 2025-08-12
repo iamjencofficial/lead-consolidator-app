@@ -6,40 +6,74 @@
     <title>Lead Consolidator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        .file-input-label {
-            transition: all 0.2s ease-in-out;
+        .dropdown-menu {
+            transition: all 0.3s ease-in-out;
         }
-        .file-input-label:hover {
-            background-color: #f0f4f8;
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone-over {
+            background-color: #eef2ff; /* indigo-50 */
+            border-color: #4f46e5; /* indigo-600 */
+        }
+        .file-list-item {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Styles for drag-and-drop table */
+        #tableHeader th, #tableBody tr {
+            cursor: grab;
+        }
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #c7d2fe;
+        }
+        .sortable-drag {
+            opacity: 1 !important;
+        }
+        .drag-handle {
+            opacity: 0.3;
+            transition: opacity 0.2s ease-in-out;
+        }
+        th:hover .drag-handle, td:hover .drag-handle {
+            opacity: 1;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen">
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen py-12">
 
-    <div class="w-full max-w-4xl mx-auto p-6 md:p-8 bg-white rounded-2xl shadow-lg">
+    <div class="w-full max-w-6xl mx-auto p-6 md:p-8 bg-white rounded-2xl shadow-lg">
         
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Lead Consolidator</h1>
-            <p class="mt-2 text-gray-600">Upload two Excel files to merge, standardize, and de-duplicate your contact lists.</p>
+            <p class="mt-2 text-gray-600">Drag & drop files to merge, then arrange your data just the way you like it.</p>
         </div>
 
-        <!-- File Upload Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="flex flex-col">
-                <label for="file1" class="mb-2 font-semibold text-gray-700">Lead Sheet 1</label>
-                <input type="file" id="file1" accept=".xlsx, .xls, .csv" class="file-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+        <!-- Drag and Drop Upload Section -->
+        <div class="border-t border-b border-gray-200 py-6 mb-6">
+            <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer">
+                <input type="file" id="fileInput" multiple accept=".xlsx, .xls, .csv" class="hidden">
+                <div class="flex flex-col items-center justify-center space-y-2 text-gray-500">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h10a4 4 0 014 4v5a4 4 0 01-4 4H7z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 16v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1m12-12v-1a2 2 0 00-2-2H8a2 2 0 00-2 2v1"></path></svg>
+                    <p class="font-semibold">Drag & drop your files here</p>
+                    <p class="text-sm">or <span class="text-blue-600 font-medium">click to browse</span></p>
+                </div>
             </div>
-            <div class="flex flex-col">
-                <label for="file2" class="mb-2 font-semibold text-gray-700">Lead Sheet 2</label>
-                <input type="file" id="file2" accept=".xlsx, .xls, .csv" class="file-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+            <div id="fileList" class="mt-4 space-y-2">
+                <!-- Selected files will be listed here -->
             </div>
         </div>
+
 
         <!-- Action Button -->
         <div class="text-center mb-8">
@@ -52,14 +86,25 @@
         <div id="resultsContainer" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-gray-900">Consolidated Contacts</h2>
-                <button id="downloadBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                    Download CSV
-                </button>
+                <!-- Export Dropdown -->
+                <div class="relative" id="exportDropdownContainer">
+                    <button id="exportBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 inline-flex items-center">
+                        Export
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="exportMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 origin-top-right">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                            <a href="#" id="downloadXlsxBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Download Excel (.xlsx)</a>
+                            <a href="#" id="downloadCsvBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Download CSV (.csv)</a>
+                            <a href="#" id="copyToSheetsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Copy for Google Sheets</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto bg-gray-50 rounded-lg shadow">
-                 <div id="tableWrapper" class="max-h-[400px] overflow-y-auto">
+                 <div id="tableWrapper" class="max-h-[500px] overflow-y-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100 sticky top-0">
+                        <thead class="bg-gray-100 sticky top-0 z-10">
                             <tr id="tableHeader"></tr>
                         </thead>
                         <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
@@ -67,42 +112,97 @@
                     </table>
                 </div>
             </div>
+             <div id="drag-description" class="hidden mt-2 text-center text-sm text-gray-500">
+                <p><strong>Tip:</strong> You can drag and drop column headers and rows to reorder them.</p>
+             </div>
              <div id="summary" class="mt-4 text-center text-gray-600 font-medium"></div>
         </div>
         
         <!-- Message Box -->
-        <div id="messageBox" class="hidden mt-4 p-4 text-center text-red-800 bg-red-100 rounded-lg"></div>
+        <div id="messageBox" class="hidden mt-4 p-4 text-center rounded-lg"></div>
 
     </div>
 
     <script>
         const consolidateBtn = document.getElementById('consolidateBtn');
-        const fileInput1 = document.getElementById('file1');
-        const fileInput2 = document.getElementById('file2');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
         const resultsContainer = document.getElementById('resultsContainer');
         const tableHeader = document.getElementById('tableHeader');
         const tableBody = document.getElementById('tableBody');
-        const downloadBtn = document.getElementById('downloadBtn');
         const messageBox = document.getElementById('messageBox');
         const summaryDiv = document.getElementById('summary');
+        const dragDescription = document.getElementById('drag-description');
+
+        const exportBtn = document.getElementById('exportBtn');
+        const exportMenu = document.getElementById('exportMenu');
+        const downloadXlsxBtn = document.getElementById('downloadXlsxBtn');
+        const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+        const copyToSheetsBtn = document.getElementById('copyToSheetsBtn');
 
         let consolidatedData = [];
+        let selectedFiles = [];
+        const MAX_FILES = 10;
 
-        // Function to show messages to the user
-        function showMessage(message) {
-            messageBox.textContent = message;
-            messageBox.classList.remove('hidden');
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 3000);
+        // --- DRAG AND DROP LOGIC ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drop-zone-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drop-zone-over');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            if (selectedFiles.length + files.length > MAX_FILES) {
+                showMessage(`You can select a maximum of ${MAX_FILES} files.`);
+                return;
+            }
+            for (const file of files) {
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                    addFileToListUI(file);
+                }
+            }
         }
 
-        // Function to parse an uploaded Excel file
+        function addFileToListUI(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-list-item flex justify-between items-center bg-gray-100 p-2 rounded-md';
+            const fileName = document.createElement('span');
+            fileName.className = 'text-sm text-gray-700';
+            fileName.textContent = file.name;
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            removeBtn.className = 'text-gray-500 hover:text-red-600';
+            removeBtn.onclick = () => {
+                selectedFiles = selectedFiles.filter(f => f !== file);
+                fileItem.remove();
+            };
+            fileItem.appendChild(fileName);
+            fileItem.appendChild(removeBtn);
+            fileList.appendChild(fileItem);
+        }
+
+        function showMessage(message, isError = true) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.toggle('bg-red-100', isError);
+            messageBox.classList.toggle('text-red-800', isError);
+            messageBox.classList.toggle('bg-green-100', !isError);
+            messageBox.classList.toggle('text-green-800', !isError);
+            setTimeout(() => messageBox.classList.add('hidden'), 4000);
+        }
+
         function parseFile(file) {
             return new Promise((resolve, reject) => {
-                if (!file) {
-                    return resolve([]); // Resolve with empty array if no file
-                }
+                if (!file) return resolve([]);
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
@@ -110,8 +210,7 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[sheetName];
-                        const json = XLSX.utils.sheet_to_json(worksheet);
-                        resolve(json);
+                        resolve(XLSX.utils.sheet_to_json(worksheet));
                     } catch (error) {
                         reject(new Error("Error parsing file: " + file.name));
                     }
@@ -121,102 +220,130 @@
             });
         }
 
-        // Main consolidation logic
+        // --- MAIN CONSOLIDATION LOGIC ---
         consolidateBtn.addEventListener('click', async () => {
-            if (!fileInput1.files[0] || !fileInput2.files[0]) {
-                showMessage("Please select both Excel files to consolidate.");
+            if (selectedFiles.length < 2) {
+                showMessage("Please select at least two Excel files to consolidate.");
                 return;
             }
-
             consolidateBtn.textContent = "Processing...";
             consolidateBtn.disabled = true;
 
             try {
-                const data1 = await parseFile(fileInput1.files[0]);
-                const data2 = await parseFile(fileInput2.files[0]);
+                const dataPromises = selectedFiles.map(parseFile);
+                const allDataArrays = await Promise.all(dataPromises);
+                const totalContactsBefore = allDataArrays.reduce((sum, arr) => sum + arr.length, 0);
 
-                // Define mappings for synonymous columns. The key is the final "canonical" name.
                 const columnMappings = {
-                    'email': ['email', 'email address', 'e-mail'],
-                    'name': ['name', 'full name', 'prospect name', 'contact name'],
-                    'phone': ['phone', 'phone number', 'mobile', 'contact number'],
-                    'company': ['company', 'company name', 'organization']
+                    'Full Name': ['name', 'full name', 'prospect name', 'contact name', 'prospect'],
+                    'First Name': ['first name', 'firstname'],
+                    'Last Name': ['last name', 'lastname'],
+                    'Email': ['email', 'email address', 'e-mail', 'prospect email'],
+                    'Phone': ['phone', 'phone number', 'mobile', 'contact number', 'direct phone'],
+                    'Job Position': ['title', 'job title', 'role', 'position'],
+                    'User Social': [],
+                    'Status': ['status'],
+                    'Sent Emails': ['sent emails'],
+                    'Email Opens': ['email opens'],
+                    'Link Clicks': ['link clicks'],
+                    'Email Replies': ['email replies', 'replies'],
+                    'Interest Level': ['interest level'],
+                    'Email Provider': ['email provider'],
+                    'Linkedin': ['linkedin', 'linkedin url', 'linkedin profile', 'linkedin_url'],
+                    'Location': ['location', 'address', 'city', 'state', 'country'],
+                    'Company': ['company', 'company name', 'organization', 'account name'],
+                    'Company Size': ['company size', 'employees'],
+                    'Industry': ['industry', 'company industry'],
+                    'Company URL': ['website', 'company website', 'url'],
+                    'Company Social': ['company social'],
+                    'Company Location': ['company location'],
+                    "Company's Country": ["company's country", 'company country'],
+                    'Company Phone': ['hq phone', 'company phone'],
+                    'Snov.io URL': ['snov.io url'],
+                    'Contacted by Email': ['contacted by email'],
+                    'Campaign Name': ['campaign', 'campaign name'],
+                    'Campaign URL': ['campaign url'],
+                    'Emails Delivered': ['emails delivered'],
+                    'Emails Bounced': ['emails bounced', 'bounced'],
+                    'Opens': ['opens'],
+                    'Clicks': ['clicks'],
+                    'Unsubscribed': ['unsubscribed'],
+                    'Auto-replied': ['auto-replied']
                 };
 
-                // Create a reverse map for quick, case-insensitive lookup (e.g., 'email address' -> 'email')
                 const reverseMappings = {};
                 for (const [canonical, synonyms] of Object.entries(columnMappings)) {
-                    synonyms.forEach(synonym => {
-                        reverseMappings[synonym.toLowerCase()] = canonical;
+                    const allNames = [canonical, ...synonyms];
+                    allNames.forEach(name => {
+                        reverseMappings[name.toLowerCase().replace(/[^a-z0-9]/g, '')] = canonical;
                     });
                 }
-
-                // Helper function to standardize the keys (column headers) of a single contact object
+                
                 const standardizeContact = (contact) => {
                     const newContact = {};
                     for (const key in contact) {
-                        const lowerKey = key.toLowerCase();
-                        const canonicalKey = reverseMappings[lowerKey];
-                        const targetKey = canonicalKey || key; // Use canonical key if it exists, otherwise original
-                        
-                        // Avoid overwriting a canonical key with a value from a synonym if it's already set
-                        if (!newContact.hasOwnProperty(targetKey)) {
-                            newContact[targetKey] = contact[key];
+                        const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const canonicalKey = reverseMappings[normalizedKey];
+                        if (canonicalKey) {
+                            if (!newContact.hasOwnProperty(canonicalKey)) {
+                                newContact[canonicalKey] = contact[key];
+                            }
+                        } else {
+                           if (!newContact.hasOwnProperty(key)) {
+                                newContact[key] = contact[key];
+                           }
                         }
                     }
                     return newContact;
                 };
 
-                // Standardize column names in both datasets
-                const standardizedData1 = data1.map(standardizeContact);
-                const standardizedData2 = data2.map(standardizeContact);
-
-                // Get all unique headers from the *standardized* data
-                const headers1 = standardizedData1.length > 0 ? Object.keys(standardizedData1[0]) : [];
-                const headers2 = standardizedData2.length > 0 ? Object.keys(standardizedData2[0]) : [];
-                const allHeaders = [...new Set([...headers1, ...headers2])];
-
-                // Combine data and ensure all objects have all possible headers
-                const combinedRawData = [...standardizedData1, ...standardizedData2];
-                const allContacts = combinedRawData.map(contact => {
+                const allStandardizedData = allDataArrays.flat().map(standardizeContact);
+                const allHeaders = [...new Set(allStandardizedData.flatMap(Object.keys))];
+                const allContacts = allStandardizedData.map(contact => {
                     const finalContact = {};
                     allHeaders.forEach(header => {
-                        finalContact[header] = contact[header] || ''; // Add blank if missing
+                        finalContact[header] = contact[header] || '';
                     });
                     return finalContact;
                 });
 
                 const uniqueContacts = new Map();
-
-                // De-duplicate using the now-canonical 'email' column
                 allContacts.forEach(contact => {
-                    const email = contact.email; // The key is now reliably 'email'
+                    const email = contact['Email'];
                     if (email) {
                         const lowerCaseEmail = String(email).toLowerCase();
                         const existingContact = uniqueContacts.get(lowerCaseEmail);
-                        
                         if (existingContact) {
-                            // If duplicate found, merge the data.
-                            const mergedContact = {...existingContact};
+                            const mergedContact = { ...existingContact };
                             allHeaders.forEach(header => {
-                                // Overwrite existing data only if the new data is not empty.
-                                // This enriches the contact with data from both sources.
-                                if (contact[header]) { 
+                                if (contact[header] && !mergedContact[header]) {
                                     mergedContact[header] = contact[header];
                                 }
                             });
-                             uniqueContacts.set(lowerCaseEmail, mergedContact);
+                            uniqueContacts.set(lowerCaseEmail, mergedContact);
                         } else {
                             uniqueContacts.set(lowerCaseEmail, contact);
                         }
                     }
                 });
 
-                consolidatedData = Array.from(uniqueContacts.values());
+                let rawConsolidatedData = Array.from(uniqueContacts.values());
+                const preferredOrder = Object.keys(columnMappings);
+                const finalHeaders = [
+                    ...preferredOrder.filter(h => allHeaders.includes(h)),
+                    ...allHeaders.filter(h => !preferredOrder.includes(h)).sort()
+                ];
+                
+                consolidatedData = rawConsolidatedData.map(row => {
+                    const newRow = {};
+                    finalHeaders.forEach(header => {
+                        newRow[header] = row[header] || '';
+                    });
+                    return newRow;
+                });
 
                 displayResults(consolidatedData);
-                
-                const summaryMsg = `Found ${data1.length} contacts in Sheet 1, ${data2.length} in Sheet 2. Consolidated to ${consolidatedData.length} unique contacts.`;
+                const summaryMsg = `Processed ${selectedFiles.length} files with ${totalContactsBefore} total contacts. Consolidated to ${consolidatedData.length} unique contacts.`;
                 summaryDiv.textContent = summaryMsg;
 
             } catch (error) {
@@ -228,44 +355,92 @@
             }
         });
         
-        // Function to display the results in a table
         function displayResults(data) {
             if (data.length === 0) {
-                showMessage("No data found or no 'email' column detected in files.");
+                showMessage("No data found or no 'Email' column detected in files.");
                 resultsContainer.classList.add('hidden');
                 return;
             }
-            
             tableHeader.innerHTML = '';
             tableBody.innerHTML = '';
 
-            // Create table headers from the keys of the first object (all objects have same keys now)
             const headers = Object.keys(data[0]);
+            const dragIconSvg = `<svg class="w-4 h-4 inline-block mr-2 drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
+
             headers.forEach(headerText => {
                 const th = document.createElement('th');
                 th.scope = 'col';
                 th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-                th.textContent = headerText;
+                th.innerHTML = `<div class="flex items-center">${dragIconSvg}<span>${headerText}</span></div>`;
                 tableHeader.appendChild(th);
             });
 
-            // Populate table rows
-            data.forEach(row => {
+            data.forEach((row) => {
                 const tr = document.createElement('tr');
-                headers.forEach(header => {
+                headers.forEach((header, colIndex) => {
                     const td = document.createElement('td');
                     td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
-                    td.textContent = row[header] || '';
+                    let content = row[header] || '';
+                    // Add drag handle only to the first column's cells
+                    if (colIndex === 0) {
+                        td.innerHTML = `<div class="flex items-center">${dragIconSvg}<span>${content}</span></div>`;
+                    } else {
+                        td.textContent = content;
+                    }
                     tr.appendChild(td);
                 });
                 tableBody.appendChild(tr);
             });
-
             resultsContainer.classList.remove('hidden');
+            dragDescription.classList.remove('hidden');
+            makeTableSortable();
         }
 
-        // Download functionality
-        downloadBtn.addEventListener('click', () => {
+        // --- SORTABLE TABLE LOGIC ---
+        function makeTableSortable() {
+            new Sortable(tableBody, {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: (evt) => {
+                    const movedRow = consolidatedData.splice(evt.oldIndex, 1)[0];
+                    consolidatedData.splice(evt.newIndex, 0, movedRow);
+                }
+            });
+
+            new Sortable(tableHeader, {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: (evt) => {
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    
+                    const currentHeaders = Object.keys(consolidatedData[0]);
+                    const movedHeader = currentHeaders.splice(oldIndex, 1)[0];
+                    currentHeaders.splice(newIndex, 0, movedHeader);
+                    
+                    consolidatedData = consolidatedData.map(row => {
+                        const newRow = {};
+                        currentHeaders.forEach(header => {
+                            newRow[header] = row[header];
+                        });
+                        return newRow;
+                    });
+                    
+                    displayResults(consolidatedData);
+                }
+            });
+        }
+
+        // --- EXPORT LOGIC ---
+        exportBtn.addEventListener('click', () => exportMenu.classList.toggle('hidden'));
+        window.addEventListener('click', (e) => {
+            if (!document.getElementById('exportDropdownContainer').contains(e.target)) {
+                exportMenu.classList.add('hidden');
+            }
+        });
+
+        // Function to download data as XLSX or CSV
+        function downloadFile(format) {
             if (consolidatedData.length === 0) {
                 showMessage("No data to download.");
                 return;
@@ -273,10 +448,63 @@
             const worksheet = XLSX.utils.json_to_sheet(consolidatedData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Consolidated Leads');
+            XLSX.writeFile(workbook, `Consolidated_Leads.${format}`);
+        }
+
+        downloadXlsxBtn.addEventListener('click', (e) => { e.preventDefault(); downloadFile('xlsx'); exportMenu.classList.add('hidden'); });
+        downloadCsvBtn.addEventListener('click', (e) => { e.preventDefault(); downloadFile('csv'); exportMenu.classList.add('hidden'); });
+
+        // Function to copy data to clipboard for pasting into Google Sheets
+        copyToSheetsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (consolidatedData.length === 0) { 
+                showMessage("No data to copy."); 
+                return; 
+            }
+
+            const headers = Object.keys(consolidatedData[0]);
+            let tsvContent = headers.join('\t') + '\n';
+            consolidatedData.forEach(row => {
+                const rowValues = headers.map(header => {
+                    const value = String(row[header] || '');
+                    return value.replace(/\t/g, ' ').replace(/\n/g, ' ');
+                });
+                tsvContent += rowValues.join('\t') + '\n';
+            });
             
-            XLSX.writeFile(workbook, 'Consolidated_Leads.csv');
+            // This function is the most reliable way to copy in secure contexts like iframes.
+            fallbackCopyTextToClipboard(tsvContent);
+            
+            exportMenu.classList.add('hidden');
         });
 
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showMessage("Copied to clipboard! You can now paste into Google Sheets.", false);
+                } else {
+                    showMessage("Copy failed. Please try again.");
+                }
+            } catch (err) {
+                showMessage("Copy failed. Please try again.");
+                console.error('Fallback copy failed', err);
+            }
+
+            document.body.removeChild(textArea);
+        }
     </script>
 </body>
 </html>
